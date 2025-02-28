@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Functional Diffusion Maps</title>
+    <style>
+	    html {
+		  scroll-behavior: smooth;
+		}
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+        }
+
+        /* Main content styling */
+        .content {
+            width: 75%;
+            padding: 20px;
+			margin-left: 270px;
+        }
+
+        /* Scrollable index (Table of Contents - TOC) */
+        .toc {
+            position: fixed;
+            left: 10px;
+            top: 20px;
+            width: 250px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            padding-left: 10px;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #007bff;
+            display: block;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .toc a.active {
+            font-weight: bold;
+            color: #ff5733;
+        }
+
+        /* Section styling for visibility */
+        section {
+            margin: 50px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: #fff;
+        }
+		
+		ol {
+		  margin-left: 20px; /* Indents the entire list */
+		  padding-left: 20px;
+		}
+		
+		ol ol {
+		  margin-left: 30px; /* Further indentation for nested lists */
+		}
+
+		ul {
+		  margin-left: 30px; /* Indents unordered lists inside the ordered list */
+		}
+		
+		.toc ol, 
+		.toc ul {
+		  margin-left: 3px !important;
+		  padding-left: 3px !important;
+		}
+		
+		.algorithm {
+			border: 2px solid #333; /* Dark border */
+			padding: 10px; /* Space inside the box */
+			margin: 10px 0; /* Space around the box */
+			background-color: #f9f9f9; /* Light background */
+			border-radius: 5px; /* Rounded corners */
+		}
+		
+		/* General code block styling */
+		pre.sourceCode {
+		  background-color: #f8f8f8; /* Dark background */
+		  color: #333; /* Light text */
+		  padding: 10px;
+		  border-radius: 5px;
+		  font-family: "Fira Code", "Courier New", monospace;
+		  font-size: 14px;
+		  line-height: 1.5;
+		  white-space: pre-wrap; /* Allow wrapping */
+		  overflow-x: auto; /* Enable horizontal scrolling */
+		  counter-reset: line-number;
+		}
+
+		/* Ensure <code> inside <pre> does not create extra box */
+		pre.sourceCode code {
+		  background: none;
+		  border: none;
+		  display: block; /* Ensure it spans full width */
+		  padding: 0;
+		  margin: 0;
+		}
+
+		/* Line numbers */
+		pre.sourceCode code span[id^="cb"]::before {
+		  content: counter(line-number);
+		  counter-increment: line-number;
+		  position: absolute;
+		  left: -30px;
+		  width: 25px;
+		  text-align: right;
+		  color: #888;
+		  font-size: 12px;
+		}
+
+		/* Syntax highlighting */
+		.sourceCode .op { color: #ffcc66; } /* Operators */
+		.sourceCode .dv { color: #99cc99; } /* Numbers */
+		.sourceCode .fl { color: #6699cc; } /* Floats */
+		.sourceCode .kw { color: #ff6699; } /* Keywords */
+		.sourceCode .fu { color: #66ccff; } /* Functions */
+		.sourceCode .st { color: #ffcc99; } /* Strings */
+		.sourceCode .co { color: #999999; font-style: italic; } /* Comments */
+    </style>
+</head>
+<body>
+
+    <!-- Table of Contents -->
+    <nav class="toc">
+        <h3>Table of Contents</h3>
+        <ul id="toc-list"></ul>
+    </nav>
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
+    rel="stylesheet"
+  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+
+  <!-- MathJax for Rendering LaTeX -->
+  <script>
+	MathJax = {
+	  tex: {
+		macros: {
+		  hdots: "{\\ldots}",
+		  texit: "{\\textit}"
+		}
+	  }
+	};
+	</script>	
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']]
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+
+  <style>
+    /* Global Resets & Basic Layout */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: #fcfcfc;
+      font-family: 'Lato', sans-serif;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    body {
+      display: flex;
+      flex-direction: row;
+    }
+
+    /* Table of Contents (Sidebar) */
+    nav#toc {
+      flex: 0 0 220px;
+      max-width: 220px;
+      background-color: #f2f2f2;
+      border-right: 1px solid #ddd;
+      padding: 1rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav#toc h2 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #555;
+    }
+    nav#toc ul {
+      list-style-type: none;
+      margin-left: 0;
+      padding-left: 0;
+    }
+    nav#toc li {
+      margin-bottom: 0.5rem;
+    }
+    nav#toc a {
+      text-decoration: none;
+      color: #444;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+    nav#toc a:hover {
+      color: #007acc;
+    }
+
+    /* Main Content */
+    main {
+      flex: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    header#title-block-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 2rem;
+    }
+    header#title-block-header h1.title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    header#title-block-header p.author {
+      font-size: 1.1rem;
+      color: #666;
+    }
+    header#title-block-header p.date {
+      font-size: 1rem;
+      color: #999;
+      margin-top: 0.5rem;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+      margin-bottom: 0.4em;
+      font-weight: 700;
+      color: #222;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.4rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+    }
+    h3 {
+      font-size: 1.2rem;
+    }
+
+    p {
+      margin-bottom: 1em;
+    }
+
+    a {
+      color: #007acc;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    a:hover {
+      color: #005f99;
+    }
+
+    /* Figures */
+    figure {
+      margin: 2rem 0;
+      text-align: center;
+    }
+    figure img {
+      max-width: 100%;
+      height: auto;
+    }
+    figure figcaption {
+      font-size: 0.95rem;
+      color: #555;
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    /* Code blocks */
+    code, pre {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      background-color: #f8f8f8;
+    }
+    div.listing {
+      margin: 1rem 0;
+    }
+    div.listing .sourceCode {
+      margin: 1rem 0;
+      background-color: #f8f8f8;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 1rem;
+      overflow: auto;
+    }
+
+	  /* Ensure the entire figure is styled properly */
+	.multi-image-figure {
+	  text-align: center;
+	  margin: 20px 0;
+	}
+
+	/* Flexbox container to align images next to each other */
+	.image-container {
+	  display: flex;
+	  justify-content: center;
+	  gap: 10px; /* Space between images */
+	  align-items: center;
+	  flex-wrap: wrap; /* Ensures responsiveness */
+	}
+
+	/* Style individual images and captions */
+	.sub-figure {
+	  text-align: center;
+	  max-width: 100%; /* Reduce width of each sub-figure */
+	}
+
+	.sub-figure img {
+	  width: 100%;
+	  max-width: 300px; /* Smaller images */
+	  height: auto;
+	  border-radius: 5px;
+	}
+
+	/* Small captions under each image */
+	.sub-caption {
+	  margin-top: 5px;
+	  font-size: 12px;
+	  color: #555;
+	}
+
+	/* Common caption (Removed bold styling) */
+	.multi-image-figure > figcaption {
+	  margin-top: 10px;
+	  font-size: 14px;
+	  font-weight: normal; /* Ensures text is not bold */
+	  color: #333; /* Slightly darker for readability */
+	}
+
+	.box {
+		width: 900px;
+		height: 70px;
+		background-color: #f0f0f0; /* Light Gray */
+		border: 2px solid #4a90e2; /* Blue */
+		padding: 15px;
+		text-align: left;
+		font-size: 18px;
+		font-weight: bold;
+		color: #2c3e50; /* Dark Blue-Gray for contrast */
+		border-radius: 5px;
+	}
+  </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<main>
+<header id="title-block-header">
+<h1 class="title">Functional Diffusion Maps</h1>
+<p class="author">Eduardo Terres Caballero</p>
+<p class="date">February 2025</p>
+</header>
+<h1 id="CHAP:state_art">State of the art: mathematical framework</h1>
+<p>In this chapter, we first provide an introduction to functional data
+and its representation. Then, we discuss the state of the art regarding
+the dimensionality reduction technique functional diffusion maps by
+first introducing the classical method of diffusion maps and then
+extending the framework to functional data.</p>
+<h2 id="representing-functional-data">Representing functional data</h2>
+<p>Let <span class="math inline">\(\mathcal{X} =
+\{x_i(t)\}_{i=1}^{N}\)</span> be a set of <span
+class="math inline">\(N\)</span> functional observations, where <span
+class="math inline">\(x_i(t)\)</span> is the observation of an
+independent functional variable <span
+class="math inline">\(X_i\)</span>. Each functional observation is a
+function of the following form, with <span class="math inline">\(p, q
+\ge 1\)</span>,</p>
+<p><span class="math display">\[\begin{aligned}
+\label{sa:fd:functional_observation}
+    x_i: \mathcal{T} \subset {\mathbb{R}}^p \to {\mathbb{R}}^q.
+\end{aligned}\]</span> In theory, each observation takes values in an
+infinite number of points, but given the limited capacity of data
+gathering techniques, we may assume that the <span
+class="math inline">\(N\)</span> functional observations have been
+measured in a grid of points <span
+class="math inline">\({\textbf{t}}= (t_1, \cdots, t_M) \in
+{\mathcal{T}}^M\)</span>. Note that the dimension of the space <span
+class="math inline">\({\mathcal{T}}\)</span> is the number of
+coordinates of each grid point. Thus, a sufficiently large M is desired
+in order to capture the true essence of the examined phenomenon. For the
+same reason, the grid points, <span
+class="math inline">\({\textbf{t}}\)</span>, shall be
+adequately distributed in order to precisely portray areas of the domain
+that are considered more important or where the observed functional
+variable is expected to have a more complex behavior. This effort may
+require specific knowledge of the problem at hand. In this context, the
+information that characterizes the functional observation <span
+class="math inline">\(x_i(t)\)</span> is precisely<br />
+<span class="math inline">\((x_i(t_1), \cdots, x_i(t_M))\)</span>.</p>
+<p>As a way of exemplifying the representation of functional data using
+a grid, we may take a close look into the Phoneme dataset, represented
+in <a href="#fig:phoneme_dataset_exs" data-reference-type="ref"
+data-reference="fig:phoneme_dataset_exs">Figure ?</a>. In particular, we have
+taken <span class="math inline">\(N=500\)</span> functional observations
+representing the distribution of the different frequencies in a set of
+signals. Each observation is categorized into one of five phonemes and
+is defined over the same grid of 50 points.</p>
+<figure id="fig:phoneme_dataset_exs">
+<img src="img/state_art/phoneme_dataset_exs.png" />
+<figcaption>Subset containing 500 functional observations of the phoneme
+dataset, each described using 50 grid points. The y axis represents the
+computed <strong>log-periodogram</strong> of the recorded speech frames
+over the different <strong>frequencies</strong>, in kHz, represented in
+the x axis. One functional observation of each phoneme category is
+highlighted. Source: <a href="https://hastie.su.domains/ElemStatLearn/"
+class="uri">https://hastie.su.domains/ElemStatLearn/</a>, accessed 10
+June 2024.</figcaption>
+</figure>
+<p>The phonemes are transcribed as follows: /sh/ as in she, /dcl/ as in
+dark, /iy/ as the vowel in she, /aa/ as the vowel in dark, and /ao/ as
+the first vowel in water.</p>
+<p>Alternatively, another way of representing functional data is through
+a basis representation. In this context, we define a basis of functions,
+<span class="math inline">\(\beta = \{\phi_j(t)\}_{j =
+1}^{\infty}\)</span>, each of the form <span
+class="math inline">\(\phi_j: \mathcal{T} \subset {\mathbb{R}}^p \to
+{\mathbb{R}}^q\)</span>, with <span class="math inline">\(p, q \ge
+1\)</span>, and represent the <span class="math inline">\(i\)</span>-th
+functional observation as</p>
+<p><span class="math display">\[\begin{aligned}
+    x_i(t) = \sum_{j = 1}^{\infty} c_{ij} \phi_j(t).
+\end{aligned}\]</span> When choosing a basis, it is important to pay
+attention to the nature of the data so the resulting functional
+observations capture the fullest extent of expression. For example, if
+the data is periodic, a Fourier basis will be an interesting choice,
+otherwise, the B-Spline is a common choice <span class="citation"
+data-cites="fdm_principal"></span>.</p>
+<h2 id="diffusion-maps">Diffusion Maps</h2>
+<p>Functional diffusion maps <span class="citation"
+data-cites="fdm_principal"></span> is an extension to functional data of
+diffusion maps, a non-linear dimensionality reduction method for
+multivariate data introduced by Coifman and Lafon <span class="citation"
+data-cites="diffusion_maps"></span> in 2004. Most of the mathematical
+foundation of diffusion maps still holds for its functional counterpart.
+Thus, we may at first study the underpinnings of the original method
+prior to extending it to functional data. This section follows Appendix
+A and Section 2 of reference <span class="citation"
+data-cites="diffusion_maps"></span>.</p>
+<p>Let <span class="math inline">\(\mathcal{X} =
+\{x_i\}_{i=1}^{N}\)</span> be a set of <span
+class="math inline">\(N\)</span> multivariate observations. Let us
+further assume that <span class="math inline">\(\mathcal{X}\)</span>
+lays over a manifold <span class="math inline">\(\mathcal{M} \subset
+{\mathbb{R}}^D\)</span>. The goal is to derive a representation of the
+dataset <span class="math inline">\(\mathcal{X}\)</span> in a
+low-dimensional space, <span
+class="math inline">\({\mathbb{R}}^{d}\)</span> where <span
+class="math inline">\(d \ll D\)</span>, with the driving idea that the
+data naturally belongs to this lower dimensional space and was initially
+represented using an unnaturally large number of dimensions <span
+class="citation" data-cites="manifold_algorithms"></span>. This new
+representation maintains certain properties of interest for our study,
+mapping points close to each other in the euclidean distance that were
+considered close in the initial representation space under an unknown
+and more complex metric <span class="citation"
+data-cites="diffusion_maps fdm_principal"></span>.</p>
+<p>The first step of the method is to build a graph including a node for
+each data point and a weight between each pair of nodes whose value
+resembles how similar these points are. This notion of similarity
+between observations is given by a kernel, which is basically a function
+that takes two <span class="math inline">\(D\)</span>-dimensional points
+as input and outputs a real number indicating the relationship between
+both points. Mathematically, the kernel <span
+class="math inline">\(k\)</span> is defined as follows and meets the
+following restrictions:</p>
+<p><span class="math display">\[\begin{aligned}
+    \begin{split}
+    &amp;k: {\mathbb{R}}^D \times {\mathbb{R}}^D \to {\mathbb{R}}\\
+    &amp;\text{$k$ is symmetric:} \; k(x, y) = k(y, x) \qquad \forall \,
+x, y \in {\mathbb{R}}^D \\
+    &amp;\text{$k$ is positivity preserving:} \; k(x, y) \ge 0 \qquad
+\forall \, x, y \in {\mathbb{R}}^D
+    \end{split}
+\end{aligned}\]</span></p>
+<p>The kernel defines the similarity in the space of the data and
+constitutes the initial knowledge that is given to the problem.
+Consequently, the election of the kernel has a direct impact on which
+features will have a greater influence in the later stages of the
+method. In this sense, high correlation values are the sole meaningful
+information within the dataset <span class="citation"
+data-cites="diffusion_maps"></span>. Having defined the kernel, we can
+build a matrix <span class="math inline">\(K = (k_{ij})_{1 \le i,j \le
+N} \in {\mathbb{R}}^{N \times N}\)</span>, where <span
+class="math inline">\(N\)</span> is the number of observations and the
+components are <span class="math inline">\(k_{ij} = k(x_i,
+x_j)\)</span>, i.e., the similarity between the points <span
+class="math inline">\(x_i\)</span> and <span
+class="math inline">\(x_j\)</span>. Note that <span
+class="math inline">\(K\)</span> is a symmetric matrix as a result of
+the symmetric property of the kernel <span
+class="math inline">\(k\)</span>. This matrix is now used for defining
+the weighted graph <span class="math inline">\(G = (\mathcal{X},
+K)\)</span>.</p>
+<p>The following step in the method is to define a random walk over the
+graph <span class="math inline">\(G\)</span>. To this end, it is
+necessary to conduct a row stochastic normalization of matrix <span
+class="math inline">\(K\)</span>, meaning that every row of <span
+class="math inline">\(K\)</span> must add up to one. Hence, the elements
+of row <span class="math inline">\(j\)</span> can be interpreted as the
+probability of jumping from datum <span
+class="math inline">\(x_j\)</span> to datum <span
+class="math inline">\(x_i\)</span>. As a part of the normalization
+process, a correction is made to reduce the influence in the method of
+how the data has been distributed. In other words, for every given pair
+we add information on the similarities between these two points and the
+rest of the dataset. Thus, for <span class="math inline">\(\alpha &gt;
+0\)</span> we define the matrix <span class="math inline">\(K^{(\alpha)}
+= (k^{(\alpha)}_{ij})_{1 \le i,j \le N} \in {\mathbb{R}}^{N \times
+N}\)</span> as follows</p>
+<p><span class="math display">\[\begin{aligned}
+    k^{(\alpha)}_{ij} = \frac{k_{ij}}{d_i^{\alpha}d_j^{\alpha}}
+    \quad
+    \text{, where}
+    \quad d_i = \sum_{j=1}^N k_{ij}.
+\end{aligned}\]</span> Once this correction has been performed, it
+remains to normalize the rows of <span
+class="math inline">\(K^{(\alpha)}\)</span> so that the elements can be
+interpreted as a probability. In this regard, we define the transition
+matrix of a Markov process <span class="math inline">\(P = (p_{ij})_{1
+\le i,j \le N} \in {\mathbb{R}}^{N \times N}\)</span> as</p>
+<p><span class="math display">\[\begin{aligned}
+    p_{ij} = \frac{k^{(\alpha)}_{ij}}{d_i^{(\alpha)}}
+    \quad
+    \text{, where}
+    \quad d^{(\alpha)}_i = \sum_{j=1}^N k^{(\alpha)}_{ij}.
+\end{aligned}\]</span></p>
+<p>A diffusion distance <span class="math inline">\(D_T^2(x_i,
+x_j)\)</span> is defined for each length of path, <span
+class="math inline">\(T \in \mathbb{N}\)</span>, in the graph. The
+notion of proximity given by this distance is, by definition, a notion
+of how strongly the points are connected in the graph. Hence, an small
+diffusion distance between points <span
+class="math inline">\(x_i\)</span> and <span
+class="math inline">\(x_j\)</span> may be interpreted as a high
+probability of transitioning from <span
+class="math inline">\(x_i\)</span> to <span
+class="math inline">\(x_j\)</span> in the random walk. However, this
+distance is difficult to calculate so we resort to the eigenanalysis of
+the transition matrix <span class="math inline">\(P\)</span>. Along this
+line, we calculate the right eigenvalues <span
+class="math inline">\(\{\lambda_l\}_{l \ge 0}\)</span> and right
+eigenvectors <span class="math inline">\(\{\psi_l\}_{l \ge 0}\)</span>
+of <span class="math inline">\(P\)</span>, such that <span
+class="math inline">\(1 = \lambda_0 &gt; |\lambda_1| \ge |\lambda_2| \ge
+\cdots\)</span> and it holds that <span class="math inline">\(P\psi_l =
+\lambda_l \psi_l\)</span>. The diffusion distance that we defined
+earlier can be approximated using the first <span
+class="math inline">\(L\)</span> eigenvalues and right eigenvectors of
+<span class="math inline">\(P\)</span>,</p>
+<p><span class="math display">\[\begin{aligned}
+    D_T (x_i, x_j)
+    \approx
+    \left(
+        \sum_{l=1}^L \lambda_l^{2T} \left(\psi_l (x_i) -  \psi_l (x_j)
+\right)^2
+    \right)^{\frac{1}{2}}.
+\end{aligned}\]</span> Ultimately, the diffusion maps are defined as
+follows. For <span class="math inline">\(i \in \{1, \cdots,
+N\}\,\)</span>,</p>
+<p><span class="math display">\[\begin{aligned}
+    \Psi_{T} (x_i) =
+    \begin{pmatrix}
+    \lambda_1^{T} \psi_1 (x_i) \\
+    \lambda_2^{T} \psi_2 (x_i) \\
+    \vdots \\
+    \lambda_L^{T} \psi_L (x_i) \\
+    \end{pmatrix}.
+\end{aligned}\]</span> The driving idea in this definition is that the
+diffusion distance of the original space can be approximated by the
+euclidean distance in the space <span
+class="math inline">\({\mathbb{R}}^L\)</span> through the diffusion maps
+<span class="math inline">\(\Psi_{T}\)</span>. This statement is
+supported by the next result.</p>
+<div class="proposition">
+<p><strong>Proposition 1.1</strong>. <em>The diffusion map <span
+class="math inline">\(\Psi_T\)</span> embeds the data into the Euclidean
+space <span class="math inline">\({\mathbb{R}}^L\)</span> in a way that
+the Euclidean distance is equal to the diffusion distance up to a
+relative accuracy <span class="math inline">\(\delta &gt;
+0\)</span>,</em></p>
+<p><em><span class="math display">\[\begin{aligned}
+        \|\Psi_T(x) - \Psi_T(y)\| \approx D_T(x, y).
+    
+\end{aligned}\]</span></em></p>
+</div>
+<p>For a proof we refer the reader to Appendix A and Section 2.4 of
+reference <span class="citation" data-cites="diffusion_maps"></span> or,
+alternatively, Section 3 of reference <span class="citation"
+data-cites="fdm_principal"></span>.</p>
+<p>The aim of this section is to extend the mathematical framework of
+diffusion maps to functional data. To this end, it suffices to define a
+kernel that takes functional data as input instead of multivariate data.
+This is, the kernel <span class="math inline">\(k\)</span> will now be
+defined as</p>
+<p><span class="math display">\[\begin{aligned}
+    k: L^2([a,b]) \times L^2([a,b]) \to \mathbb{R}.
+\end{aligned}\]</span> The generalization of the kernel to functional
+data is done by taking a norm in a function space and defining the
+kernel based on this norm. For example, in the commonly used RBF kernel,
+defined as</p>
+<p><span class="math display">\[RBF(f, g) = \exp\left(-\frac{\|f -
+g\|_{L^2}^2}{2 \, l^2}\right),\]</span> the norm <span
+class="math inline">\(\|\cdot\|_{L^2}\)</span> transforms functional
+inputs <span class="math inline">\(f\)</span> and <span
+class="math inline">\(g\)</span> into a scalar, hence processing the
+functional component of the kernel. This shows that the notion of
+similarity given by the kernel is essentially inherited from the chosen
+functional norm. After evaluating the kernel over the functional data,
+we obtain a weighted graph in the same way we obtained it in the
+multivariate case. From this point, the rest of the process is identical
+to the classical diffusion maps method. In the following algorithm we present the steps
+necessary to obtain the diffusion maps for a given functional
+dataset.</p>
+<div class="algorithm">
+<h3 class="algorithm-title">Diffusion Maps</h3>
+<p>Construct the weighted graph <span
+class="math inline">\((\mathcal{X}, K)\)</span>, where <span
+class="math display">\[K = \{k_{ij}\}_{1 \le i, j \le N} \quad
+\text{with} \quad k_{ij} = k(x_i(t), x_j(t)).\]</span></p>
+<p>Construct the vector of vertex densities, <span
+class="math inline">\(d^\alpha = (d_1^\alpha, \cdots,
+d_N^\alpha)\)</span>, where <span class="math display">\[d_i^\alpha =
+\Bigl(\sum_{j=1}^{N} k_{ij}\Bigr)^\alpha.\]</span></p>
+<p>Construct the normalized graph <span
+class="math inline">\((\mathcal{X}, K^{(\alpha)})\)</span>, where <span
+class="math display">\[K^{(\alpha)} = \{ k_{ij}^{(\alpha)} \}_{1 \le i,
+j \le N} \quad \text{and} \quad k_{ij}^{(\alpha)} =
+\frac{k_{ij}}{d_i^{\alpha} d_j^{\alpha}}.\]</span></p>
+<p>Construct the vector of vertex densities for the normalized graph,
+<span class="math inline">\(d^{(\alpha)}\)</span>, where <span
+class="math display">\[d_i^{(\alpha)} = \sum_{j = 1}^{N}
+k_{ij}^{(\alpha)}.\]</span></p>
+<p>Define the transition matrix <span class="math display">\[P =
+(p_{ij})_{1 \le i,j \le N}, \quad \text{with} \quad p_{ij} =
+\frac{k_{ij}^{(\alpha)}}{d_i^{(\alpha)}}.\]</span></p>
+<p>Obtain the eigenvalues <span class="math inline">\(\{\lambda_l\}_{l
+\ge 0}\)</span> and the right eigenvectors <span
+class="math inline">\(\{\psi_l\}_{l \ge 0}\)</span> of <span
+class="math inline">\(P\)</span>, ordered in ascending order of the
+eigenvalues.</p>
+<p>Calculate the diffusion maps for each <span class="math inline">\(i
+\in \{1, \cdots, N\}\)</span>: <span
+class="math display">\[\Psi_{T}(x_i) =
+      \begin{pmatrix}
+        \lambda_1^{T} \psi_1(x_i) \\
+        \lambda_2^{T} \psi_2(x_i) \\
+        \vdots \\
+        \lambda_L^{T} \psi_L(x_i)
+      \end{pmatrix}.\]</span></p>
+</div>
+<h2 id="functional-diffusion-maps-theory">Functional Diffusion Maps</h2>
+<p>The aim of this section is to extend the mathematical framework of
+diffusion maps to functional data. To this end, it suffices to define a kernel that takes
+functional data as input instead of multivariate data. This is, the
+kernel <span class="math inline">\(k\)</span> will now be defined as</p>
+<p><span class="math display">\[\begin{aligned}
+    k: L^2([a,b]) \times L^2([a,b]) \to \mathbb{R}.
+\end{aligned}\]</span> The generalization of the kernel to functional
+data is done by taking a norm in a function space and defining the
+kernel based on this norm. For example, in the commonly used RBF kernel,
+defined as</p>
+<p><span class="math display">\[RBF(f, g) = \exp\left(-\frac{\|f -
+g\|_{L^2}^2}{2 \, l^2}\right),\]</span> the norm <span
+class="math inline">\(\|\cdot\|_{L^2}\)</span> transforms functional
+inputs <span class="math inline">\(f\)</span> and <span
+class="math inline">\(g\)</span> into a scalar, hence processing the
+functional component of the kernel. This shows that the notion of
+similarity given by the kernel is essentially inherited from the chosen
+functional norm. After evaluating the kernel over the functional data,
+we obtain a weighted graph in the same way we obtained it in the
+multivariate case. From this point, the rest of the process is identical
+to the classical diffusion maps method. In the following algorithm we present the steps
+necessary to obtain the diffusion maps for a given functional
+dataset.</p>
+<div class="algorithm">
+<h3 class="algorithm-title">Functional Diffusion Maps</h3>
+<p>Construct the weighted graph <span
+class="math inline">\((\mathcal{X}, K)\)</span>, where <span
+class="math display">\[K = \{k_{ij}\}_{1 \le i, j \le N}, \quad
+\text{with } k_{ij} = k(x_i(t), x_j(t)).\]</span></p>
+<p>Construct the vector of vertex densities, <span
+class="math display">\[d^\alpha = (d_1^\alpha, \cdots, d_N^\alpha),
+\quad \text{where } d_i^\alpha = \Bigl(\sum_{j=1}^{N}
+k_{ij}\Bigr)^\alpha.\]</span></p>
+<p>Construct the normalized graph <span
+class="math inline">\((\mathcal{X}, K^{(\alpha)})\)</span>, where <span
+class="math display">\[K^{(\alpha)} = \{ k_{ij}^{(\alpha)} \}_{1 \le i,
+j \le N}, \quad \text{with } k_{ij}^{(\alpha)} =
+\frac{k_{ij}}{d_i^\alpha d_j^\alpha}.\]</span></p>
+<p>Construct the vector of vertex densities for the normalized graph,
+<span class="math display">\[d^{(\alpha)} = \bigl(d_1^{(\alpha)},
+\cdots, d_N^{(\alpha)}\bigr), \quad \text{where } d_i^{(\alpha)} =
+\sum_{j=1}^{N} k_{ij}^{(\alpha)}.\]</span></p>
+<p>Define the transition matrix <span class="math display">\[P =
+(p_{ij})_{1 \le i,j \le N}, \quad \text{with } p_{ij} =
+\frac{k_{ij}^{(\alpha)}}{d_i^{(\alpha)}}.\]</span></p>
+<p>Obtain the eigenvalues <span class="math inline">\(\{\lambda_l\}_{l
+\ge 0}\)</span> and the right eigenvectors <span
+class="math inline">\(\{\psi_l\}_{l \ge 0}\)</span> of <span
+class="math inline">\(P\)</span>, ordered in ascending order of the
+eigenvalues.</p>
+<p>Calculate the diffusion maps for each <span class="math inline">\(i
+\in \{1, \cdots, N\}\)</span>: <span
+class="math display">\[\Psi_{T}(x_i) =
+      \begin{pmatrix}
+        \lambda_1^{T} \psi_1(x_i) \\
+        \lambda_2^{T} \psi_2(x_i) \\
+        \vdots \\
+        \lambda_L^{T} \psi_L(x_i)
+      \end{pmatrix}.\]</span></p>
+</div>
+<h2 id="nystrom-fdm">The Nyström method: FDM for out-of-sample data</h2>
+<p>The aim of this section is to present the extension of the FDM method
+for out-of-sample data via the Nyström method. We now refer as training
+set and denote <span
+class="math inline">\(\mathcal{X}_{\text{train}}\)</span> to the set
+used to compute the diffusion maps in the first place via FDM Algorithm. Our objective is to
+obtain the diffusion coordinates of a new datum, <span
+class="math inline">\(\hat{x}_{i}\)</span>, which does not belong to
+this training set without having to recompute the whole method over
+<span class="math inline">\(\mathcal{X}_{\text{train}} \cup
+\{\hat{x}_{i}\}\)</span>. In other words, we want to predict the
+diffusion coordinates of data that does not belong to the set we used to
+train the method in the first place. The mathematical idea behind this
+prediction is to take a linear combination of the diffusion coordinates
+from <span class="math inline">\(\mathcal{X}_{\text{train}}\)</span>
+where the similarity between <span
+class="math inline">\(\hat{x}_{i}\)</span> and the observations in <span
+class="math inline">\(\mathcal{X}_{\text{train}}\)</span> serves as a
+weight in this linear combination. In this sense, instead of defining
+the diffusion maps as <span class="math inline">\(\Psi_{T} (x_i) = (
+    \lambda_1^{T} \psi_1 (x_i), \;
+    \lambda_2^{T} \psi_2 (x_i), \;
+    \cdots, \;
+    \lambda_L^{T} \psi_L (x_i)
+)^t\)</span>, we will define them as <span
+class="math inline">\(\hat{\Psi}_{T} ({\hat{x}}_i (t)) =
+    (
+        \lambda_1^{T} \hat{\psi}_1 ({\hat{x}}_i), \;
+        \lambda_2^{T} \hat{\psi}_2 ({\hat{x}}_i), \;
+        \cdots, \;
+        \lambda_L^{T} \hat{\psi}_L ({\hat{x}}_i)
+    )^t,\)</span> where <span class="math inline">\(\hat{\psi}_j
+({\hat{x}}_i) =
+    \frac{1}{\lambda_j} \sum_{k=1}^{N} \psi_j(x_k) \, p({\hat{x}}_i,
+x_k),\)</span> with <span class="math inline">\(p({\hat{x}}_i, x_k) =
+p_{ik}\)</span>. Note that the definition of <span
+class="math inline">\(\hat{\psi}_j ({\hat{x}}_i)\)</span> is precisely a
+linear combination over <span class="math inline">\(\psi_j(x_k)\)</span>
+with <span class="math inline">\(p_{ik}\)</span> as the weights. In
+the following algorithm we present the steps necessary to predict the diffusion coordinates for
+out-of-sample data via the Nyström method.</p>
+<div class="algorithm">
+<h3 class="algorithm-title">Nystrom method for FDM</h3>
+<p><span>Nyström method for predicting the diffusion coordinates of
+out-of-sample data.</span><span id="algorithm:nystrom_fdm"
+label="algorithm:nystrom_fdm"></span></p>
+<p>Construct the weighted graph (<span
+class="math inline">\(\mathcal{X}_{\text{out}}\)</span>, <span
+class="math inline">\(K_{\text{out}}\)</span>), where <span
+class="math inline">\(K_{\text{out}} = (k_{ij})_{1 \le i \le M, 1 \le j
+\le N}\)</span>, and <span class="math inline">\(k_{ij} =
+k({\hat{x}}_i(t), x_j(t))\)</span>.</p>
+<p>Construct the vector of vertex densities <span
+class="math inline">\(h^\alpha = (h_1^\alpha, \cdots,
+h_M^\alpha)\)</span>, where <span class="math inline">\(h_i^\alpha =
+{(\sum_{j=1}^{N} k_{ij})} ^ \alpha\)</span>.</p>
+<p>Construct the normalized graph <span class="math inline">\((
+\mathcal{X}_{\text{out}}, K^{(\alpha)}_\text{out} )\)</span>, where
+<span class="math inline">\(K_{\text{out}}^{(\alpha)} =
+{(k_{ij}^{(\alpha)})}_{1 \le i \le M, 1 \le j \le N}\)</span> and <span
+class="math inline">\(k_{ij}^{(\alpha)} = \frac{k_{ij}}{h_i^{\alpha}
+d_j^{\alpha}}\)</span>.</p>
+<p>Define the transition matrix <span class="math inline">\(P = \left(
+p_{ij} \right)_{1 \le i \le M, 1 \le j \le N}\)</span>, where <span
+class="math inline">\(p_{ij} =
+\frac{k_{ij}^{(\alpha)}}{d_i^{(\alpha)}}\)</span>, and <span
+class="math inline">\(d_i^{(\alpha)} = \sum_{j = 1}^{N}
+k_{ij}^{(\alpha)}\)</span>.</p>
+<p>Predict the diffusion coordinates for <span class="math inline">\(i
+\in \{1, \cdots, M\}\,\)</span>: <span
+class="math display">\[\hat{\Psi}_{T} ({\hat{x}}_i) =
+      \begin{pmatrix}
+        \lambda_1^{T} \hat{\psi}_1 ({\hat{x}}_i) \\
+        \lambda_2^{T} \hat{\psi}_2 ({\hat{x}}_i) \\
+        \vdots \\
+        \lambda_L^{T} \hat{\psi}_L ({\hat{x}}_i) \\
+      \end{pmatrix},\]</span> where <span
+class="math display">\[\hat{\psi}_j ({\hat{x}}_i) =
+        \frac{1}{\lambda_j} \sum_{k=1}^{N} \psi_j(x_k) \, p({\hat{x}}_i,
+x_k),
+        \quad
+        p({\hat{x}}_i, x_k) = p_{ik}.\]</span></p>
+</div>
+<h1 id="examples-of-use-of-fdm">Examples of use of FDM</h1>
+<h2 id="introduction">Introduction</h2>
+<p>In this chapter we will present a series of examples to illustrate
+the use of functional diffusion maps for both synthetic and real-world
+data. The procedure to create a synthetic dataset is as follows. Let
+<span class="math inline">\(\mathcal{X} = \{x_i\}_{i=1}^{N}\)</span> be
+a set of <span class="math inline">\(N\)</span> multivariate
+observations. Let us further assume that <span
+class="math inline">\(\mathcal{X}\)</span> lays over a manifold <span
+class="math inline">\(\mathcal{M} \subset {\mathbb{R}}^D\)</span>, but
+naturally belongs to a manifold in <span
+class="math inline">\({\mathbb{R}}^d\)</span> with <span
+class="math inline">\(d \ll D\)</span>. To create a synthetic functional
+dataset, we will take a basis of functions <span
+class="math inline">\(\beta = \{{\phi}_i(x)\}_{i=1}^d\)</span>, where
+<span class="math inline">\({\phi}_i: {\mathbb{R}}\to
+{\mathbb{R}}\)</span>, and convert each point in <span
+class="math inline">\(\mathcal{X}\)</span> by taking the representation
+of this point in the basis <span class="math inline">\(\beta\)</span>.
+if <span class="math inline">\(x_i = (x_i^{(1)}, \cdots,
+x_i^{(n)})\)</span> is a point in <span
+class="math inline">\(\mathcal{X}\)</span>, the corresponding functional
+observation is <span class="math inline">\({(x_i^{(1)}, \cdots,
+x_i^{(n)})}_{\beta}
+= \sum_{k=1}^d x_i^{(k)} {\phi}_k (x)\)</span>. Here, <span
+class="math inline">\(\mathcal{X}\)</span> will be chosen to be a
+nonlinear manifold, since one of the advantages this method provides, as
+opposed to other classical dimensionality reduction methods, is the
+ability to perform well in nonlinear settings <span class="citation"
+data-cites="diffusion_maps"></span>. In the real-world case we work with
+the phoneme dataset, presented in Chapter <a href="#CHAP:state_art"
+data-reference-type="ref" data-reference="CHAP:state_art">1</a>.</p>
+<h2 id="simple-use-of-fdm-moons-dataset">Simple use of FDM: moons
+dataset</h2>
+<p>In this section we will present a simple use scenario of functional
+diffusion maps, corresponding to the use case <strong>UC-01</strong>.
+More specifically, we want to obtain the diffusion coordinates of a
+functional dataset to evaluate if the method is able to understand the
+underlying geometry of the data, this is, the relations that the data
+originally present. To this end we will employ the moons dataset, which
+represents the trajectory of two moons at different points in time over
+the space <span class="math inline">\({\mathbb{R}}^2\)</span>. In order
+to obtain the functional equivalent of the dataset we will be using the
+basis <span class="math inline">\(\beta = \{sin(4x), \; x^2 + 2x -
+2\}\)</span>, where <span class="math inline">\(x \in [-\pi,
+\pi]\)</span>. In <a href="#fig:results:moons"
+data-reference-type="ref" data-reference="fig:results:moons">Figure ?</a> we
+can see, on the left, the trajectories of two moons, distinguished by
+colors blue and orange and, on the right, the transformation of each
+point in the trajectory through the basis <span
+class="math inline">\(\beta\)</span>.</p>
+<figure id="fig:results:moons">
+<p><img src="img/results/moons.png" style="width:46.0%" alt="image" />
+<img src="img/results/moons_functional.png" style="width:44.0%"
+alt="image" /></p>
+<figcaption> Moons dataset. On the left, the trajectories of two moons
+in the space <span class="math inline">\({\mathbb{R}}^2\)</span>. On the
+right, the functional transformation of the moons dataset using the
+basis <span class="math inline">\(\beta = \{sin(4x), \; x^2 + 2x -
+2\}\)</span>. </figcaption>
+</figure>
+<p>Once the functional data is available, we will now set the parameters
+of the model. An optimization process has been conducted for the
+parameter of the RBF kernel, after which we conclude that a value of
+<em>length scale</em> of 0.25 is a good value for the method to
+understand the local geometry of the dataset. In later sections we will
+discuss the process of fine tuning the parameters of the models
+according to the purpose that we pursue. Moreover, we want to visualize
+the diffusion coordinates in two dimensions, thus we will set a number
+of components of 2. Finally, we will set <span
+class="math inline">\(\alpha = 0\)</span> and only one step in the
+random walk. In the following code the necessary
+steps to obtain the diffusion coordinates (once we have already created
+the object representing the functional dataset) is presented. Note the simplicity
+provided by the representation of the method as a <em>scikit-learn</em>
+transformer.</p>
+<pre class="sourceCode python">
+  <code>
+    <span id="cb1-1"><a href="#cb1-1"></a>fdm <span class="op">=</span> FDM(n_components<span class="op">=</span><span class="dv">2</span>, kernel<span class="op">=</span>Gaussian(length_scale<span class="op">=</span><span class="fl">0.25</span>), alpha<span class="op">=</span><span class="dv">0</span>, n_steps<span class="op">=</span><span class="dv">1</span>)</span>
+    <span id="cb1-2"><a href="#cb1-2"></a>embedding <span class="op">=</span> fdm.fit_transform(fd_moons)</span>
+  </code>
+</pre>
+
+
+<p>As we can observe in <a href="#fig:results:moons_dc"
+data-reference-type="ref" data-reference="fig:results:moons_dc">Figure ?</a>,
+the method has correctly interpreted the topological nature of the data
+by successfully separating the trajectories associated to both moons. In
+this sense, the method has mapped points of the same trajectory nearby
+and has distorted the distance between points of different
+trajectories.</p>
+<figure id="fig:results:moons_dc">
+<p><img src="img/results/moons_dc.png" style="width:40.0%"
+alt="image" /> <span id="fig:results:moons_dc"
+label="fig:results:moons_dc"></span></p>
+<figcaption> Diffusion coordinates of the moons dataset for
+<em>n_components = 2</em>, <em>length_scale = 0.25</em>, <em>alpha =
+0</em> and <em>n_steps = 1</em>. </figcaption>
+</figure>
+<h2 id="parameter-tuning-spirals-dataset">Parameter tuning: spirals
+dataset</h2>
+<p>Once a basic use of the dimensionality reduction method has been
+presented, it is time to develop further on how to select the parameters
+of the model. For this task we will be using a synthetic dataset created
+from two spirals that resemble the trajectories of two bodies colliding,
+in a simplified and physically non-rigorous way, as shown in <a
+href="#fig:results:spirals" data-reference-type="ref"
+data-reference="fig:results:spirals">Figure ?</a>. The objective is to
+interpret which functional observations belong to which body. In this
+sense, if we carry out the mental experiment of separating the
+trajectories, ignoring the colors, we might notice that this effort is
+not as straightforward as in the moons example where the trajectories
+were easily distinguished.</p>
+<figure id="fig:results:spirals">
+<p><img src="img/results/spirals.png" style="width:44.0%" alt="image" />
+<img src="img/results/spirals_functional.png" style="width:46.0%"
+alt="image" /> <span id="fig:results:spirals"
+label="fig:results:spirals"></span></p>
+<figcaption> Spirals dataset. On the left, the trajectories of two
+bodies toward collision in the space <span
+class="math inline">\({\mathbb{R}}^2\)</span>. On the right, the
+functional transformation of the moons dataset using the basis <span
+class="math inline">\(\beta = \{\frac{x}{3}cos(x), \;
+\frac{x}{3}sin(x)\}\)</span> with <span class="math inline">\(x \in
+[-\pi, \pi]\)</span>. </figcaption>
+</figure>
+<p>We now define two sets of possible values for the parameters
+<em>alpha</em> and the <em>length scale</em> parameter of the kernel,
+where <span class="math inline">\(l\)</span> denotes the <em>length
+scale</em> parameter.</p>
+<p><span class="math inline">\(G_{\alpha} = \{0,\; 0.33,\; 0.66,\;
+1\}\)</span> for <em>alpha</em>,<br />
+<span class="math inline">\(G_{l} = \{1,\; 3,\; 4.5,\; 7,\; 10,\; 11,\;
+20\}\)</span> for <em>length scale</em>.</p>
+<p>The aim of this example is to obtain the tuple <span
+class="math inline">\((\alpha, l) = G_{\alpha} \times G_{l}\)</span>
+that we argue is best through visualization for the task of separating
+both paths. In <a href="#fig:results:spirals_params_vertical"
+data-reference-type="ref"
+data-reference="fig:results:spirals_params_vertical">Figure ?</a> we can
+observe a grid of images with the diffusion coordinates for the
+different parameters. The first thing to notice is that the parameter
+<em>length scale</em> exerts a greater influence in the resulting
+embedding than the parameter <em>alpha</em>.</p>
+<figure id="fig:results:spirals_params_vertical">
+<p><img src="img/results/spirals_params_vertical.png"
+style="width:90.0%" alt="image" /> <span
+id="fig:results:spirals_params_vertical"
+label="fig:results:spirals_params_vertical"></span></p>
+<figcaption> Diffusion coordinates of the spirals dataset for parameters
+<em>n_steps = 1</em>, <em>n_components = 2</em> and <em>alpha</em> and
+<em>length scale</em> in the set <span class="math inline">\(G_{\alpha}
+\times G_{l}\)</span>. </figcaption>
+</figure>
+<p>In this sense, the figures of any given row are more similar than
+those of any given column. Moreover, we can see that the optimal choice
+of the <em>length scale</em> parameter of the kernel is 4.5, because it
+visually presents the more clear separation between the spirals.
+Regarding <em>alpha</em>, given that it is not determinant, we shall
+choose a value of 0 because, by theory, it is equivalent to skipping the
+normalization step in the process. In other words, if we obtain a very
+similar result without performing this step it means that, for this
+specific dataset and selection of parameters, this effort is not really
+needed.</p>
+<p>In order to further understand the behavior of the method as the
+<em>length scale</em> parameter changes, let us analyze the form of the
+RBF kernel function, since this is precisely the starting information
+available to the method. In particular, the kernel is a measure of
+similarity between points, hence the larger the value of the kernel
+between <span class="math inline">\(x\)</span> and <span
+class="math inline">\(x&#39;\)</span>, the more similar these
+observations are considered to be. In <a
+href="#fig:results:gaussian_kernel" data-reference-type="ref"
+data-reference="fig:results:gaussian_kernel">Figure ?</a> we can see the RBF
+kernel for <em>length scale</em> values of 1, 4.5 and 20. Moreover, it
+is noticeable how the kernel widens as the <em>length scale</em>
+increases. For two spiral points which are close their functional
+equivalents will also be close in the <span
+class="math inline">\(L^2\)</span> norm, meaning that the value of the
+RBF kernel will be generally close to one. Nevertheless, if the
+<em>length scale</em> parameter is too small, even contiguous points may
+be considered distant and, consequently, not similar. With this
+information in mind let us now revisit the first row of <a
+href="#fig:results:spirals_params_vertical" data-reference-type="ref"
+data-reference="fig:results:spirals_params_vertical">Figure ?</a>, where all
+points are displayed in an apparently random manner since no points are
+considered similar. On the contrary, when the parameter is too large
+(<span class="math inline">\(l = 20\)</span>, last row), the kernel
+becomes too wide and all points are considered similar to each other.
+Consequently, the method interprets points from one arm of the spiral as
+being close to points in the next arm, even though these belong to
+different trajectories.</p>
+<figure id="fig:results:gaussian_kernel">
+<p><img src="img/results/gaussian_kernel.png" style="width:45.0%"
+alt="image" /> <span id="fig:results:gaussian_kernel"
+label="fig:results:gaussian_kernel"></span></p>
+<figcaption> RBF kernel function for <em>length scales</em> <span
+class="math inline">\(1, 4.5\)</span> and <span
+class="math inline">\(20\)</span>. </figcaption>
+</figure>
+<p>To further illustrate this idea, in <a
+href="#fig:results:spirals:matrix" data-reference-type="ref"
+data-reference="fig:results:spirals:matrix">Figure ?</a> we can observe the
+matrices of the weighted graphs, which store the kernel evaluation over
+the data. In the case <span class="math inline">\(l=1\)</span> the
+matrix is close to the identity since a given point is not considered to
+be close to any other. In the case <span
+class="math inline">\(l=4.5\)</span> the matrix presents non-zero values
+in the minor diagonals which are close to the main diagonal. The kernel
+is wide enough so that each point is considered similar to nearby points
+in the same trajectory, but its not too wide so that points in
+contiguous arms of the spiral are also considered similar. In fact, this
+is precisely what happens in the case <span
+class="math inline">\(l=20\)</span>. Here there are four sets of minor
+diagonals which contain non-zero values. Since the first 100 points in
+each axis correspond to the first trajectory and the other 100 to the
+second one, the stripes that appear in the top right and bottom left
+quadrants (if we divide the matrix in four equal squares) represent
+contiguous arms of the spiral being considered similar, even though they
+belong to different trajectories.</p>
+<figure id="fig:results:spirals:matrix" class="multi-image-figure">
+    <div class="image-container">
+        <div class="sub-figure">
+            <img src="img/results/spirals_matrix_1.png" alt="l = 1" />
+            <p class="sub-caption"><span class="math inline">\(l = 1\)</span></p>
+        </div>
+        <div class="sub-figure">
+            <img src="img/results/spirals_matrix_2.png" alt="l = 4.5" />
+            <p class="sub-caption"><span class="math inline">\(l = 4.5\)</span></p>
+        </div>
+        <div class="sub-figure">
+            <img src="img/results/spirals_matrix_3.png" alt="l = 20" />
+            <p class="sub-caption"><span class="math inline">\(l = 20\)</span></p>
+        </div>
+    </div>
+    <figcaption>Results for different values of the length-scale parameter <span class="math inline">\(l\)</span>.</figcaption>
+</figure>
+
+
+<h2
+id="visualizing-diffusion-coordinates-in-three-dimensions-swiss-roll-dataset">Visualizing
+diffusion coordinates in three dimensions: Swiss roll dataset</h2>
+<p>The aim of this section is to develop further on the role of the
+parameter <em>n_components</em>. In particular, we now want to create a
+synthetic dataset from a manifold belonging to a three dimensional
+space, with the aim of visualizing the diffusion coordinates in three
+dimensions. Moreover, we will not be using a classified dataset and our
+aim will not be to classify two manifolds but rather to see if the
+method is able to interpret a more complex structure. In <a
+href="#fig:results:swissroll" data-reference-type="ref"
+data-reference="fig:results:swissroll">Figure ?</a> we present the dataset
+that we will be working on this section. The creation of the functional
+dataset is done through the basis <span class="math inline">\(\beta =
+\{sin(4x), cos(8x), sin(12x)\}\)</span>.</p>
+<figure id="fig:results:swissroll">
+<p><img src="img/results/swissroll.png" style="width:44.0%"
+alt="image" /> <img src="img/results/swissroll_functional.png"
+style="width:46.0%" alt="image" /></p>
+<figcaption> <em>Swiss roll dataset</em>. On the left, a manifold in the
+<span class="math inline">\({\mathbb{R}}^3\)</span> space whose
+structure resembles a Swiss roll. On the right, the first fifty
+observations of the functional transformation of the Swiss roll dataset
+using the basis <span class="math inline">\(\beta = \{sin(4x), cos(8x),
+sin(12x)\}\)</span>. </figcaption>
+</figure>
+<p>We now perform a parameter tuning over <em>length scale</em> and we
+fix <em>alpha</em> to 1, even though we could have chosen other value
+for <em>alpha</em>. In particular, we choose <em>length scale</em> over
+the set <span class="math inline">\(G&#39;_{l} = \{1,\; 1.25,\; 1.5,\;
+3,\; 3.75,\; 4\}\)</span>. These values have been chosen to represent
+the most diversity in the diffusion coordinates with the aim of
+enriching the analysis here presented.</p>
+<figure id="fig:results:swissroll_params">
+<p><img src="img/results/swissroll_params.png" alt="image" /> <span
+id="fig:results:swissroll_params"
+label="fig:results:swissroll_params"></span></p>
+<figcaption> Diffusion coordinates for the Swiss roll dataset for the
+parameters in the set <span class="math inline">\(G&#39;_{l}\)</span>.
+</figcaption>
+</figure>
+<p>In <a href="#fig:results:swissroll_params"
+data-reference-type="ref"
+data-reference="fig:results:swissroll_params">Figure ?</a> we present the
+diffusion coordinates for the <em>length scale</em> values in <span
+class="math inline">\(G&#39;_{l}\)</span>. We first notice that for a
+value of <span class="math inline">\(l=3\)</span> the manifold has been
+unrolled. Note that in the roll there are pairs of points whose
+euclidean distance is small but whose shortest path contained in the
+manifold is significantly larger, since it must complete an entire loop.
+In this sense, the process happens to have taken into account the
+shortest path distance rather than the euclidean one. Thus, one may
+argue that the topological nature of the data has been respected. For
+these reasons the value <span class="math inline">\(l=3\)</span>
+constitutes a good choice. Nevertheless, one may argue that <span
+class="math inline">\(l=1.5\)</span> and <span
+class="math inline">\(l=3.9\)</span> are also good choices for this same
+reason. In fact, any value in the interval <span
+class="math inline">\([1.5, \; 3.9]\)</span> allows for this unrolling
+of the manifold. In this regard, the election of the optimal parameters
+is relative to the problem at hand and in this case there is a range of
+reasonable values, rather than a single one. For values less than <span
+class="math inline">\(1.5\)</span> the kernel is too narrow to capture
+the similarity between points in the same leaf of the Swiss roll,
+similarly to how it occurred in the spirals dataset. The most noticeable
+thing is the sudden scattering of the points when changing from a value
+of <em>length scale</em> of <span class="math inline">\(3.9\)</span> to
+<span class="math inline">\(4\)</span>. This sudden scattering occurs
+because around <span class="math inline">\(l=4\)</span> there is a
+turning point where the kernel widens enough such that points in the
+contiguous leaves of the Swiss roll start to be considered close. This
+process can be seen in <a
+href="#fig:results:swissroll_params_refined" data-reference-type="ref"
+data-reference="fig:results:swissroll_params_refined">Figure ?</a>, where we
+take a more refined look over the effect of the <em>length scale</em>
+parameter in the interval <span class="math inline">\([3.987,
+4]\)</span>. As the <em>length scale</em> parameter goes to <span
+class="math inline">\(4\)</span>, the diffusion coordinates scatter,
+until we recover diffusion coordinates which are similarly displayed to
+the original dataset.</p>
+<figure id="fig:results:swissroll_params_refined">
+<img src="img/results/swissroll_params_refined.png"
+style="width:80.0%" />
+<figcaption> Diffusion coordinates for the Swiss roll dataset for the
+parameters in the set <span class="math inline">\(\{3.987, \;3.988,
+\;3.989, \;4\}\)</span>. </figcaption>
+</figure>
+<h2 id="real-world-application-phoneme-dataset">Real-world application:
+phoneme dataset</h2>
+<p>In Chapter <a href="#CHAP:state_art" data-reference-type="ref"
+data-reference="CHAP:state_art">1</a>, the work was initially motivated
+by presenting a dataset containing information about five phonemes. In
+this section, two experiments are performed to test the functional
+diffusion maps method over this dataset. In a first experiment, the aim
+is to classify these functional observations into their corresponding
+phoneme labels as a part, for example, of a speech recognition project.
+In a second experiment, the aim is to visually compare the predicted
+diffusion coordinates of an out-of-sample test set, obtained via the
+Nyström method, and the real values. We now define <span
+class="math inline">\(\mathcal{D} = (X, y)\)</span>, where <span
+class="math inline">\(\mathcal{X}\)</span> is the functional dataset and
+<span class="math inline">\(y\)</span> contains the classification of
+the functional observations into phonemes.</p>
+<h4
+id="experiment-1-testing-the-accuracy-of-fdm-for-classification-in-relation-to-the-size-of-the-training-set.">Experiment
+1: Testing the accuracy of FDM for classification in relation to the
+size of the training set.</h4>
+<p>In this first experiment, we will use the nearest neighbors
+classification method together with functional diffusion maps. We refer
+to this combination as pipeline from now on. Our objective is to answer
+the following question: How much training information does this pipeline
+of methods need to properly classify a test set? The values of
+<em>n_steps</em> and <em>n_components</em> are fixed to 1 and 2,
+respectively. The scheme is as follows:</p>
+<ol>
+<li><p>Define a test set <span
+class="math inline">\(\mathcal{D}_{\text{test}}\)</span> and <span
+class="math inline">\(\mathcal{D}_{\text{train}}\)</span> with <span
+class="math inline">\(|\mathcal{D}_{\text{test}}| = 100\)</span> and
+<span class="math inline">\(|\mathcal{D}_{\text{train}}| =
+400\)</span>.</p></li>
+<li><p>Define <span class="math inline">\(N\)</span> training subsets
+<span class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> with
+<span class="math inline">\(i \in \{1, \cdots, N\}\)</span> such that
+<span class="math inline">\(\mathcal{D}_{\text{train}}^1 \subset \cdots
+\subset \mathcal{D}_{\text{train}}^N\)</span>. Here, <span
+class="math inline">\(\mathcal{D}_{\text{train}}^N =
+\mathcal{D}_{\text{train}}\)</span> and <span
+class="math inline">\(|\mathcal{D}_{\text{train}}^i| =
+20i\)</span>.</p></li>
+<li><p>Define a parameter grid to perform the optimization of the
+pipeline. The optimization will be performed over parameters
+<em>alpha</em>, the kernel type, the <em>length scale</em> parameter of
+the kernel and the <em>number of neighbors</em> of the nearest neighbors
+classifier. In particular,</p>
+<ul>
+<li><p><span class="math inline">\(G_{\alpha} = \{0,\; 0.25,\; 0.5,\;
+0.75,\; 1.0\}\)</span>.</p></li>
+<li><p><span class="math inline">\(G_{kernel} = \{RBF\;kernel,
+Laplacian\;kernel\}\)</span> and each kernel using <em>length scale</em>
+values <span class="math inline">\(G_{l} = \{0.5, 1, 2, 3, 4, 6,
+10\}\)</span>.</p></li>
+<li><p><span class="math inline">\(G_{neighbors} = \{3, 5, 7, 11,
+19\}\)</span>.</p></li>
+</ul></li>
+<li><p>for <span class="math inline">\(i \in \{1, \cdots, N\}\)</span>,
+carry out the use case <strong>UC-03</strong> with <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> as training
+and <span class="math inline">\(\mathcal{D}_{\text{test}}\)</span> as
+test sets.</p>
+<ol>
+<li><p>Perform parameter tuning in the pipeline (FDM + KNN) using <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span>.</p></li>
+<li><p>Train the pipeline over the training subset <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> using the
+parameters that have been deemed optimal.</p></li>
+<li><p>Predict the accuracy (percentage of correctly classified data)
+when predicting the diffusion coordinates of <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> and <span
+class="math inline">\(\mathcal{D}_{\text{test}}\)</span>.</p></li>
+</ol></li>
+<li><p>Generate a plot exhibiting the accuracies for the different sizes
+of the training subsets.</p></li>
+</ol>
+<p>Performing the aforementioned steps leads to obtaining the graph in
+<a href="#fig:results:phoneme:accuracies"
+data-reference-type="ref"
+data-reference="fig:results:phoneme:accuracies">Figure ?</a>. Here, the
+accuracies for predicting both the test and training subsets are
+represented. Two horizontal lines, corresponding to the average of both
+functions for <span class="math inline">\(N &gt; 200\)</span> are also
+plotted. Firstly, we observe that the accuracy grows rapidly and
+stagnates at a value higher than <span
+class="math inline">\(80\%\)</span> accuracy for the test set. The fact
+that it rapidly reaches the <span class="math inline">\(80\%\)</span>
+mark means that in some circumstances it may be reasonable to use a
+smaller training subset with the aim of reducing computational costs.
+Secondly, we also observe that the prediction of <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> is not <span
+class="math inline">\(100\%\)</span> accurate, even though we have used
+the same set for training. This makes sense, since the Nyström method
+uses an average of the diffusion coordinates of the training set to
+obtain the prediction for a given value. The weight that each diffusion
+coordinate acquires during the prediction is dependent on the value of
+the kernel for the predicted functional observation and the observations
+of the training dataset. Hence, when we try to predict a point belonging
+to the training subset, even though the diffusion coordinate with the
+most importance is the one corresponding to this same observation (since
+the kernel is maximum), there is noise coming from the other
+observations, since the value of the kernel is not zero for these. This
+idea also helps avoid overfitting and reinforces the generalization
+capacity of the method.</p>
+<figure id="fig:results:phoneme:accuracies">
+<p><img src="img/results/phoneme_accuracies.png" style="width:50.0%"
+alt="image" /> <span id="fig:results:phoneme:accuracies"
+label="fig:results:phoneme:accuracies"></span></p>
+<figcaption> Accuracies in the prediction of <span
+class="math inline">\(\mathcal{D}_{\text{test}}\)</span> and <span
+class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> for
+different sizes of the training subset. </figcaption>
+</figure>
+<h4
+id="experiment-2-visualizing-the-prediction-of-the-diffusion-coordinates">Experiment
+2: Visualizing the prediction of the diffusion coordinates</h4>
+<p>To grasp the functioning of the functional diffusion maps in the
+pipeline as well as the capabilities that the Nyström method provides
+when predicting diffusion coordinates, another experiment has been
+assembled. This time, we start from the same training set as before,
+<span class="math inline">\(\mathcal{D}_{\text{train}}\)</span>, and
+define six training subsets of lengths <span class="math inline">\(20,
+40, 120, 160, 280\)</span> and <span class="math inline">\(400\)</span>,
+similarly to how we did in the previous experiment. In the images the
+lengths of the training subsets are referred to as <span
+class="math inline">\(N\)</span>. The main difference with Experiment 1
+is that the same values of the parameters will be used for all sizes of
+the training subset. Specifically, we fix <em>n_components = 2</em>,
+<em>n_steps = 1</em>, <em>alpha = 0</em> and a value of <em>length
+scale</em> of 4 for visual interpretability.</p>
+<p>In <a href="#fig:results:phoneme_dc" data-reference-type="ref"
+data-reference="fig:results:phoneme_dc">Figure ?</a> a set of images is
+provided showing a comparison between the true (crosses) and the
+predicted (dots) diffusion coordinates for the test set, for different
+values of <span class="math inline">\(N\)</span>. This is precisely an
+example of the use case <strong>UC-02</strong>. The so called true
+diffusion coordinates constitute the ground truth of this experiment and
+are obtained by training the method over <span
+class="math inline">\(\mathcal{D}_{\text{train}} \cup
+\mathcal{D}_{\text{test}}\)</span> and then keeping only the diffusion
+coordinates corresponding to <span
+class="math inline">\(\mathcal{D}_{\text{test}}\)</span>. For values
+<span class="math inline">\(N=20\)</span> and <span
+class="math inline">\(40\)</span>, the predicted diffusion coordinates
+do not match the real embeddings. Even so, they are really close to the
+true embeddings, specially if we take into account the really small size
+of the training subset. For values <span class="math inline">\(N =
+120\)</span> and <span class="math inline">\(160\)</span>, the diffusion
+coordinates are practically the same, thus adding <span
+class="math inline">\(40\)</span> points had little effect. For <span
+class="math inline">\(N = 280\)</span>, the diffusion coordinates for
+phonemes /aa/ and /ao/ already match the true values. Finally, for <span
+class="math inline">\(N=400\)</span>, even if the embeddings do not need
+to be equal because the true embedding was obtained by training over
+<span class="math inline">\(\mathcal{D}_{\text{train}} \cup
+\mathcal{D}_{\text{test}}\)</span> and the prediction by training over
+<span class="math inline">\(\mathcal{D}_{\text{train}}\)</span>, in
+practice they are almost indistinguishable.</p>
+<figure id="fig:results:phoneme_dc">
+<img src="img/results/phoneme_dc_full.png" style="width:70.0%" />
+<figcaption> Comparison between the true (crosses) and predicted (dots)
+diffusion coordinates of the test set for <span class="math inline">\(N
+\in \{20, 40, 120, 160, 280, 400\}\)</span>. A rescaling factor, <span
+class="math inline">\(\sqrt{\frac{N}{N_{train} + N_{test}}}\)</span>, is
+applied to the predicted coordinates, since the scale depends on the
+training set size. The method has been trained for <em>n_components =
+2</em>, <em>n_steps = 1</em>, <em>alpha = 0</em> and
+<em>length_scale</em> = 4. </figcaption>
+</figure>
+<hr>
+<h3>About this work</h3>
+	<p>
+	This work is in essence a reproducibility study of the work [1].
+	<b>Consider citing this published article.</b>
+	It belongs to a greater work involving the implementation of FDM into the Python library for functional data
+	<a href="https://github.com/GAA-UAM/scikit-fda">Scikit-FDA</a>.
+	</p>
+<h3>Bibliography</h3>
+<ol>
+	<li>Barroso, María, Alaíz, Carlos, Fernández Pascual, Ángela, & Torrecilla, José. (2023). <i>Functional Diffusion Maps</i>. Statistics and Computing, 34(22).</li>
+	<li>Kokoszka, P., & Reimherr, M. (2017). <i>Introduction to Functional Data Analysis</i>. Chapman and Hall/CRC. <a href="https://doi.org/10.1201/9781315117416">DOI</a></li>
+	<li>Wang, Jane-Ling, Chiou, Jeng-Min, & Müller, Hans-Georg. (2016). <i>Functional Data Analysis</i>. Annual Review of Statistics and Its Application, 3, 257-295.</li>
+	<li>Fernández, Ángela, González, Ana M., Díaz, Julia, & Dorronsoro, José R. (2015). <i>Diffusion Maps for Dimensionality Reduction and Visualization of Meteorological Data</i>. Neurocomputing, 163, 25-37. <a href="https://doi.org/10.1016/j.neucom.2014.08.090">DOI</a></li>
+	<li>Coifman, Ronald R., & Lafon, Stéphane. (2006). <i>Diffusion Maps</i>. Applied and Computational Harmonic Analysis, 21(1), 5-30. <a href="https://www.sciencedirect.com/science/article/pii/S1063520306000546">URL</a></li>
+	<li>Cayton, Lawrence. (2005). <i>Algorithms for Manifold Learning</i>.</li>
+	<li>Grupo Aprendizaje Automático, UAM. (2024). <i>scikit-fda: Functional Data Analysis Python Package</i>. GitHub. <a href="https://github.com/GAA-UAM/scikit-fda">URL</a></li>
+	<li>Ramos-Carreño, Carlos, Torrecilla, José Luis, Carbajo-Berrocal, Miguel, Marcos, Pablo, & Suárez, Alberto. (2023). <i>scikit-fda: A Python Package for Functional Data Analysis</i>. Journal of Open Source Software.</li>
+	<li>Rabin, N., & Coifman, R.R. (2012). <i>Heterogeneous Datasets Representation and Learning using Diffusion Maps and Laplacian Pyramids</i>. Proceedings of the SIAM International Conference on Data Mining (SDM), 189-199.</li>
+</ol>
+</main>
+
+
+<script>
+    // Configuration: which heading levels to include
+    const headingSelectors = ['h1', 'h2'];
+    // Container to place the generated TOC
+    const tocList = document.getElementById('toc-list');
+
+    // 1. Query all headings
+    const headings = document.querySelectorAll(headingSelectors.join(','));
+
+    // 2. We'll store the table of contents items in a structure 
+    //    that helps build nested lists.
+    //    Each item: { element, text, id, level, children: [...] }
+    function getHeadingLevel(tagName) {
+      // e.g., H1 -> 1, H2 -> 2, etc.
+      return parseInt(tagName.replace(/[^\d]/g, ''), 10);
+    }
+
+    // Create an anchor ID if it doesn't exist
+    function ensureAnchorId(el) {
+      if (!el.id) {
+        // Create a slug from heading text
+        el.id = el.textContent
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^\w\-]+/g, '');
+      }
+      return el.id;
+    }
+
+    const tocItems = [];
+    headings.forEach((heading) => {
+      const level = getHeadingLevel(heading.tagName);
+      const text = heading.textContent.trim();
+      const id = ensureAnchorId(heading);
+      tocItems.push({
+        element: heading,
+        text: text,
+        id: id,
+        level: level,
+        children: []
+      });
+    });
+
+    // 3. Build a nested structure so H2 is inside H1, H3 is inside H2, etc.
+    //    We'll keep a "stack" of the most recent item at each level.
+    const root = { level: 0, children: [] };
+    const parentsStack = [root];
+
+    tocItems.forEach((item) => {
+      // Pop back the stack until we find a parent with a level < item.level
+      while (parentsStack.length > 1 &&
+             parentsStack[parentsStack.length - 1].level >= item.level) {
+        parentsStack.pop();
+      }
+
+      // Add item to the parent's children
+      parentsStack[parentsStack.length - 1].children.push(item);
+      // Push this item into stack as the new current parent
+      parentsStack.push(item);
+    });
+
+    // 4. Convert the nested structure to actual <ul><li> HTML elements
+    function createList(items) {
+      const ul = document.createElement('ul');
+      items.forEach((item) => {
+        const li = document.createElement('li');
+
+        // Create link
+        const a = document.createElement('a');
+        a.textContent = item.text;
+        a.href = '#' + item.id;
+        li.appendChild(a);
+
+        // Recursively build children if any
+        if (item.children.length > 0) {
+          li.appendChild(createList(item.children));
+        }
+
+        ul.appendChild(li);
+      });
+      return ul;
+    }
+
+    // 5. Attach the generated list to our #toc-list container
+    const finalList = createList(root.children);
+    tocList.appendChild(finalList);
+  </script>
+  
+	<script>
+	  document.addEventListener("DOMContentLoaded", function() {
+		// 1. Collect all <figure> elements in the order they appear
+		const figures = document.querySelectorAll("figure");
+		const figureNumbers = {};
+
+		// 2. Assign each figure a number and update its <figcaption>
+		figures.forEach((figure, index) => {
+		  const figNumber = index + 1;
+		  const figId = figure.id; // e.g. "fig:phoneme_dataset_exs"
+		  figureNumbers[figId] = figNumber;
+
+		  // Insert "Figure X: " before any existing text in the <figcaption>
+		  const caption = figure.querySelector("figcaption");
+		  if (caption) {
+			const existingText = caption.innerHTML.trim();
+			caption.innerHTML = `<strong>Figure ${figNumber}:</strong> ${existingText}`;
+		  }
+		});
+
+		// 3. Update all references with the correct figure number
+		//    We look for <a data-reference-type="ref" data-reference="FIGURE_ID">
+		const refLinks = document.querySelectorAll('a[data-reference-type="ref"]');
+		refLinks.forEach(link => {
+		  const figId = link.getAttribute("data-reference"); // matches figure's id
+		  const figNumber = figureNumbers[figId];
+		  if (figNumber) {
+			link.textContent = `Figure ${figNumber}`;
+		  }
+		});
+	  });
+	</script>
+
+
+
+</body>
+</html>
