@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
+	<meta charset="utf-8" />
+	<meta name="description" content="Machine learning dimensionality reduction method: Functional Diffusion Maps">
+	<meta name="keywords" content="machine learning, dimensionality reduction, non-linear, diffusion maps, functional data">
+	<meta name="author" content="Eduardo Terres">
   <title>Functional Diffusion Maps</title>
     <style>
 	    html {
@@ -441,7 +444,7 @@ representing the distribution of the different frequencies in a set of
 signals. Each observation is categorized into one of five phonemes and
 is defined over the same grid of 50 points.</p>
 <figure id="fig:phoneme_dataset_exs">
-<img src="img/state_art/phoneme_dataset_exs.png" />
+<img src="img/state_art/phoneme_dataset_exs.png" loading="lazy" />
 <figcaption>Subset containing 500 functional observations of the phoneme
 dataset, each described using 50 grid points. The y axis represents the
 computed <strong>log-periodogram</strong> of the recorded speech frames
@@ -889,7 +892,7 @@ colors blue and orange and, on the right, the transformation of each
 point in the trajectory through the basis <span
 class="math inline">\(\beta\)</span>.</p>
 <figure id="fig:results:moons">
-<p><img src="img/results/moons.png" style="width:46.0%" alt="image" />
+<p><img src="img/results/moons.png" style="width:46.0%" loading="lazy" alt="image" />
 <img src="img/results/moons_functional.png" style="width:44.0%"
 alt="image" /></p>
 <figcaption> Moons dataset. On the left, the trajectories of two moons
@@ -929,7 +932,7 @@ this sense, the method has mapped points of the same trajectory nearby
 and has distorted the distance between points of different
 trajectories.</p>
 <figure id="fig:results:moons_dc">
-<p><img src="img/results/moons_dc.png" style="width:40.0%"
+<p><img src="img/results/moons_dc.png" style="width:40.0%" loading="lazy"
 alt="image" /> <span id="fig:results:moons_dc"
 label="fig:results:moons_dc"></span></p>
 <figcaption> Diffusion coordinates of the moons dataset for
@@ -951,8 +954,8 @@ trajectories, ignoring the colors, we might notice that this effort is
 not as straightforward as in the moons example where the trajectories
 were easily distinguished.</p>
 <figure id="fig:results:spirals">
-<p><img src="img/results/spirals.png" style="width:44.0%" alt="image" />
-<img src="img/results/spirals_functional.png" style="width:46.0%"
+<p><img src="img/results/spirals.png" style="width:44.0%" loading="lazy" alt="image" />
+<img src="img/results/spirals_functional.png" style="width:46.0%" loading="lazy"
 alt="image" /> <span id="fig:results:spirals"
 label="fig:results:spirals"></span></p>
 <figcaption> Spirals dataset. On the left, the trajectories of two
@@ -982,7 +985,7 @@ different parameters. The first thing to notice is that the parameter
 <em>length scale</em> exerts a greater influence in the resulting
 embedding than the parameter <em>alpha</em>.</p>
 <figure id="fig:results:spirals_params_vertical">
-<p><img src="img/results/spirals_params_vertical.png"
+<p><img src="img/results/spirals_params_vertical.png" loading="lazy"
 style="width:90.0%" alt="image" /> <span
 id="fig:results:spirals_params_vertical"
 label="fig:results:spirals_params_vertical"></span></p>
@@ -1030,7 +1033,7 @@ Consequently, the method interprets points from one arm of the spiral as
 being close to points in the next arm, even though these belong to
 different trajectories.</p>
 <figure id="fig:results:gaussian_kernel">
-<p><img src="img/results/gaussian_kernel.png" style="width:45.0%"
+<p><img src="img/results/gaussian_kernel.png" style="width:45.0%" loading="lazy"
 alt="image" /> <span id="fig:results:gaussian_kernel"
 label="fig:results:gaussian_kernel"></span></p>
 <figcaption> RBF kernel function for <em>length scales</em> <span
@@ -1060,15 +1063,15 @@ belong to different trajectories.</p>
 <figure id="fig:results:spirals:matrix" class="multi-image-figure">
     <div class="image-container">
         <div class="sub-figure">
-            <img src="img/results/spirals_matrix_1.png" alt="l = 1" />
+            <img src="img/results/spirals_matrix_1.png" loading="lazy" alt="l = 1" />
             <p class="sub-caption"><span class="math inline">\(l = 1\)</span></p>
         </div>
         <div class="sub-figure">
-            <img src="img/results/spirals_matrix_2.png" alt="l = 4.5" />
+            <img src="img/results/spirals_matrix_2.png" loading="lazy" alt="l = 4.5" />
             <p class="sub-caption"><span class="math inline">\(l = 4.5\)</span></p>
         </div>
         <div class="sub-figure">
-            <img src="img/results/spirals_matrix_3.png" alt="l = 20" />
+            <img src="img/results/spirals_matrix_3.png" loading="lazy" alt="l = 20" />
             <p class="sub-caption"><span class="math inline">\(l = 20\)</span></p>
         </div>
     </div>
@@ -1092,8 +1095,8 @@ that we will be working on this section. The creation of the functional
 dataset is done through the basis <span class="math inline">\(\beta =
 \{sin(4x), cos(8x), sin(12x)\}\)</span>.</p>
 <figure id="fig:results:swissroll">
-<p><img src="img/results/swissroll.png" style="width:44.0%"
-alt="image" /> <img src="img/results/swissroll_functional.png"
+<p><img src="img/results/swissroll.png" style="width:44.0%" loading="lazy"
+alt="image" /> <img src="img/results/swissroll_functional.png" loading="lazy"
 style="width:46.0%" alt="image" /></p>
 <figcaption> <em>Swiss roll dataset</em>. On the left, a manifold in the
 <span class="math inline">\({\mathbb{R}}^3\)</span> space whose
@@ -1110,7 +1113,7 @@ the set <span class="math inline">\(G&#39;_{l} = \{1,\; 1.25,\; 1.5,\;
 the most diversity in the diffusion coordinates with the aim of
 enriching the analysis here presented.</p>
 <figure id="fig:results:swissroll_params">
-<p><img src="img/results/swissroll_params.png" alt="image" /> <span
+<p><img src="img/results/swissroll_params.png" loading="lazy" alt="image" /> <span
 id="fig:results:swissroll_params"
 label="fig:results:swissroll_params"></span></p>
 <figcaption> Diffusion coordinates for the Swiss roll dataset for the
@@ -1157,7 +1160,7 @@ class="math inline">\(4\)</span>, the diffusion coordinates scatter,
 until we recover diffusion coordinates which are similarly displayed to
 the original dataset.</p>
 <figure id="fig:results:swissroll_params_refined">
-<img src="img/results/swissroll_params_refined.png"
+<img src="img/results/swissroll_params_refined.png" loading="lazy"
 style="width:80.0%" />
 <figcaption> Diffusion coordinates for the Swiss roll dataset for the
 parameters in the set <span class="math inline">\(\{3.987, \;3.988,
@@ -1269,7 +1272,7 @@ observations, since the value of the kernel is not zero for these. This
 idea also helps avoid overfitting and reinforces the generalization
 capacity of the method.</p>
 <figure id="fig:results:phoneme:accuracies">
-<p><img src="img/results/phoneme_accuracies.png" style="width:50.0%"
+<p><img src="img/results/phoneme_accuracies.png" style="width:50.0%" loading="lazy"
 alt="image" /> <span id="fig:results:phoneme:accuracies"
 label="fig:results:phoneme:accuracies"></span></p>
 <figcaption> Accuracies in the prediction of <span
@@ -1323,7 +1326,7 @@ to be equal because the true embedding was obtained by training over
 <span class="math inline">\(\mathcal{D}_{\text{train}}\)</span>, in
 practice they are almost indistinguishable.</p>
 <figure id="fig:results:phoneme_dc">
-<img src="img/results/phoneme_dc_full.png" style="width:70.0%" />
+<img src="img/results/phoneme_dc_full.png" loading="lazy" style="width:70.0%" />
 <figcaption> Comparison between the true (crosses) and predicted (dots)
 diffusion coordinates of the test set for <span class="math inline">\(N
 \in \{20, 40, 120, 160, 280, 400\}\)</span>. A rescaling factor, <span
