@@ -875,7 +875,7 @@ data-reference-type="ref" data-reference="CHAP:state_art">1</a>.</p>
 <h2 id="simple-use-of-fdm-moons-dataset">Simple use of FDM: moons
 dataset</h2>
 <p>In this section we will present a simple use scenario of functional
-diffusion maps, corresponding to the use case <strong>UC-01</strong>.
+diffusion maps, corresponding to the use case <strong>UC-01</strong> (dimensionality reduction for visualization, thus with embedding dimension of 2 or 3).
 More specifically, we want to obtain the diffusion coordinates of a
 functional dataset to evaluate if the method is able to understand the
 underlying geometry of the data, this is, the relations that the data
@@ -1225,8 +1225,8 @@ values <span class="math inline">\(G_{l} = \{0.5, 1, 2, 3, 4, 6,
 19\}\)</span>.</p></li>
 </ul></li>
 <li><p>for <span class="math inline">\(i \in \{1, \cdots, N\}\)</span>,
-carry out the use case <strong>UC-03</strong> with <span
-class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> as training
+carry out the use case <strong>UC-03</strong> (parameter tuning for classiﬁcation with cross-validation via a scikit-learn pipeline consisting of FDM and a classiﬁcation method)
+with <span class="math inline">\(\mathcal{D}_{\text{train}}^i\)</span> as training
 and <span class="math inline">\(\mathcal{D}_{\text{test}}\)</span> as
 test sets.</p>
 <ol>
@@ -1302,8 +1302,8 @@ data-reference="fig:results:phoneme_dc">Figure ?</a> a set of images is
 provided showing a comparison between the true (crosses) and the
 predicted (dots) diffusion coordinates for the test set, for different
 values of <span class="math inline">\(N\)</span>. This is precisely an
-example of the use case <strong>UC-02</strong>. The so called true
-diffusion coordinates constitute the ground truth of this experiment and
+example of the use case <strong>UC-02</strong> (dimensionality reduction for visualization of out-of-sample functional data via the Nyström method).
+The so called true diffusion coordinates constitute the ground truth of this experiment and
 are obtained by training the method over <span
 class="math inline">\(\mathcal{D}_{\text{train}} \cup
 \mathcal{D}_{\text{test}}\)</span> and then keeping only the diffusion
