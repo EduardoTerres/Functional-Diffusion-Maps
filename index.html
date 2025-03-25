@@ -59,6 +59,12 @@
             color: #ff5733;
         }
 
+        @media (max-width: 768px) {
+          .toc {
+            display: none;
+          }
+        }    
+
         /* Section styling for visibility */
         section {
             margin: 50px 0;
@@ -141,11 +147,12 @@
 </head>
 <body>
 
-    <!-- Table of Contents -->
-    <nav class="toc">
-        <h3>Table of Contents</h3>
-        <ul id="toc-list"></ul>
-    </nav>
+  <!-- Table of Contents -->
+  <nav class="toc">
+      <h3>Table of Contents</h3>
+      <ul id="toc-list"></ul>  
+  </nav>
+  
   <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1462,7 +1469,7 @@ training set size. The method has been trained for <em>n_components =
 		// 2. Assign each figure a number and update its <figcaption>
 		figures.forEach((figure, index) => {
 		  const figNumber = index + 1;
-		  const figId = figure.id; // e.g. "fig:phoneme_dataset_exs"
+		  const figId = figure.id;
 		  figureNumbers[figId] = figNumber;
 
 		  // Insert "Figure X: " before any existing text in the <figcaption>
