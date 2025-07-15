@@ -19,20 +19,20 @@
         .content {
             width: 75%;
             padding: 20px;
-			margin-left: 270px;
+			      margin-left: 270px;
         }
 
         /* Scrollable index (Table of Contents - TOC) */
         .toc {
             position: fixed;
-            left: 10px;
+            left: 20px;
             top: 20px;
-            width: 250px;
+            width: 280px;
             max-height: 90vh;
             overflow-y: auto;
             background: #f8f9fa;
             border: 1px solid #ddd;
-            padding: 10px;
+            padding: 15px;
             border-radius: 5px;
         }
 
@@ -203,52 +203,16 @@
     }
 
     body {
-      display: flex;
-      flex-direction: row;
+      display: block;
     }
 
-    /* Table of Contents (Sidebar) */
-    nav#toc {
-      flex: 0 0 220px;
-      max-width: 220px;
-      background-color: #f2f2f2;
-      border-right: 1px solid #ddd;
-      padding: 1rem;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow-y: auto;
-    }
-    nav#toc h2 {
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: #555;
-    }
-    nav#toc ul {
-      list-style-type: none;
-      margin-left: 0;
-      padding-left: 0;
-    }
-    nav#toc li {
-      margin-bottom: 0.5rem;
-    }
-    nav#toc a {
-      text-decoration: none;
-      color: #444;
-      font-size: 0.95rem;
-      transition: color 0.2s;
-    }
-    nav#toc a:hover {
-      color: #007acc;
-    }
+
 
     /* Main Content */
     main {
       flex: 1;
       max-width: 1000px;
-      margin: 0 auto;
+      margin-left: 320px;
       padding: 2rem;
       min-height: 100vh;
     }
